@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MPI Kimia - Konfigurasi Elektron</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+body{font-family:'Trebuchet MS',system-ui,sans-serif;background:linear-gradient(160deg,#dbeafe,#eff6ff);color:#1e3a8a}
+.screen{display:none;min-height:100vh;padding:72px 16px 32px;flex-direction:column;align-items:center}
+.screen.on{display:flex}
+.btn{background:#2563eb;color:#fff;font-weight:700;border-radius:14px;padding:12px 22px;border:0;cursor:pointer;box-shadow:0 4px 0 #1e3a8a;transition:transform .15s,background .15s}
+.btn:hover{background:#1d4ed8;transform:translateY(-2px)}
+.btn:active{transform:translateY(2px);box-shadow:0 1px 0 #1e3a8a}
+.btn.alt{background:#fff;color:#1d4ed8;box-shadow:0 4px 0 #93c5fd}
+.btn.alt:hover{background:#eff6ff}
+.btn.sel{background:#f59e0b;color:#1e3a8a;box-shadow:0 4px 0 #b45309}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.card{background:#fff;border-radius:20px;padding:20px;box-shadow:0 6px 20px #1e3a8a22;width:100%;max-width:760px}
+.rv{background:#eff6ff;border:2px dashed #60a5fa;border-radius:14px;padding:12px;margin-top:10px;cursor:pointer}
+.rv .h{display:none;margin-top:6px;color:#0f172a}.rv.open .h{display:block}
+.blank{display:inline-block;min-width:70px;border-bottom:3px solid #2563eb;background:#dbeafe;border-radius:8px;text-align:center;padding:0 8px;margin:0 4px;font-weight:700;cursor:pointer}
+.chip{display:inline-block;background:#bfdbfe;border:2px solid #60a5fa;border-radius:999px;padding:6px 16px;font-weight:700;cursor:grab;user-select:none}
+.chip.on{background:#f59e0b;border-color:#b45309}
+table.t td,table.t th{border:1px solid #93c5fd;padding:6px 10px;text-align:center}
+@keyframes drop{from{transform:translateY(-120px);opacity:0}to{transform:none;opacity:1}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pop{0%{transform:scale(.6);opacity:0}100%{transform:scale(1);opacity:1}}
+.drop{animation:drop .9s ease-out both}.pop{animation:pop .8s .6s ease-out both}.spin{animation:spin 14s linear infinite}
+@media print{body *{visibility:hidden}#cert,#cert *{visibility:visible}#cert{position:absolute;left:0;top:0;width:100%}}
+</style>
+</head>
+<body>
+<button id="home" class="btn fixed top-3 left-3 z-50" style="display:none;padding:8px 14px" onclick="go('menu')">🏠 HOME</button>
+<button id="gear" class="btn fixed top-3 right-3 z-50" style="display:none;padding:8px 14px" onclick="$('#set').classList.toggle('hidden')">⚙️ Setting</button>
+
+<div id="set" class="hidden fixed top-16 right-3 z-50 card" style="max-width:280px">
+  <b>Pengaturan Suara</b>
+  <button id="mt" class="btn w-full mt-3" onclick="toggleMusic()">🎵 Musik: ON</button>
+  <label class="block mt-3 font-bold">Volume: <span id="vl">60</span>%</label>
+  <input id="vr" type="range" min="0" max="100" value="60" class="w-full" oninput="setVol(this.value)">
+</div>
+
+<!-- SPLASH -->
+<section id="s-splash" class="screen on justify-center text-center">
+  <svg class="spin w-40 h-40" viewBox="-60 -60 120 120"><circle r="9" fill="#1d4ed8"/><ellipse rx="52" ry="20" fill="none" stroke="#60a5fa" stroke-width="3"/><ellipse rx="52" ry="20" transform="rotate(60)" fill="none" stroke="#60a5fa" stroke-width="3"/><ellipse rx="52" ry="20" transform="rotate(120)" fill="none" stroke="#60a5fa" stroke-width="3"/><circle cx="52" r="6" fill="#f59e0b"/><circle cx="-26" cy="-45" r="6" fill="#f59e0b"/><circle cx="-26" cy="45" r="6" fill="#f59e0b"/></svg>
+  <p class="drop font-bold text-xl mt-4">Media Pembelajaran Interaktif · Kimia Kelas X SMA</p>
+  <h1 class="drop text-5xl md:text-7xl font-extrabold text-blue-700 my-3">KONFIGURASI<br>ELEKTRON</h1>
+  <p class="drop text-lg">Model Atom Bohr, Golongan &amp; Periode</p>
+  <button class="btn pop text-2xl mt-8" style="padding:16px 56px" onclick="startApp()">MULAI</button>
+  <p class="mt-10 text-sm">Pengembang: Imas Roriah, S.Pd. · Tahun 2026</p>
+</section>
+
+<!-- MENU -->
+<section id="s-menu" class="screen items-center">
+  <h2 class="text-3xl font-extrabold text-blue-700 mb-6">MENU UTAMA</h2>
+  <div class="grid gap-4 w-full max-w-sm">
+    <button class="btn text-xl" onclick="go('beranda')">🏠 BERANDA</button>
+    <button class="btn text-xl" onclick="tab=0;materi();go('materi')">📘 MATERI</button>
+    <button class="btn text-xl" onclick="go('siminfo')">🧪 SIMULASI</button>
+    <button class="btn text-xl" onclick="kuis();go('kuis')">🎮 KUIS</button>
+    <button class="btn alt text-lg" onclick="$('#set').classList.remove('hidden')">⚙️ SETTING (Musik &amp; Volume)</button>
+  </div>
+  <p class="mt-8 text-sm">Pengembang: Imas Roriah, S.Pd. · Tahun 2026</p>
+</section>
+
+<!-- BERANDA -->
+<section id="s-beranda" class="screen">
+  <div class="card">
+    <h2 class="text-2xl font-extrabold text-blue-700 mb-2">Selamat Datang! 👋</h2>
+    <p>Media ini membantumu memahami <b>konfigurasi elektron model atom Bohr</b>.</p>
+    <h3 class="font-bold mt-4">🎯 Tujuan Pembelajaran</h3>
+    <ol class="list-decimal ml-6">
+      <li>Siswa dapat menuliskan susunan konfigurasi elektron Bohr.</li>
+      <li>Siswa dapat menganalisis letak golongan dan periode suatu unsur menggunakan konfigurasi elektron Bohr.</li>
+    </ol>
+    <h3 class="font-bold mt-4">🧭 Petunjuk</h3>
+    <ol class="list-decimal ml-6">
+      <li>Pelajari <b>MATERI</b> sampai selesai.</li>
+      <li>Asah kemampuan lewat 4 game di <b>KUIS</b>.</li>
+      <li>Kerjakan 10 soal <b>SIMULASI</b>, lalu dapatkan sertifikat.</li>
+    </ol>
+    <p class="mt-4 text-sm">Pengembang: Imas Roriah, S.Pd. · Tahun 2026</p>
+  </div>
+</section>
+
+<!-- MATERI -->
+<section id="s-materi" class="screen">
+  <div class="card">
+    <div id="tabs" class="flex flex-wrap gap-2 mb-4"></div>
+    <div id="mc"></div>
+  </div>
+</section>
+
+<!-- KUIS -->
+<section id="s-kuis" class="screen">
+  <h2 class="text-2xl font-extrabold text-blue-700 mb-4">🎮 Pilih Game</h2>
+  <div id="kl" class="grid gap-4 w-full max-w-3xl md:grid-cols-2"></div>
+</section>
+<section id="s-game" class="screen">
+  <div class="card" id="ga"></div>
+</section>
+
+<!-- SIMULASI -->
+<section id="s-siminfo" class="screen">
+  <div class="card text-center">
+    <h2 class="text-2xl font-extrabold text-blue-700">🧪 Simulasi (10 Soal)</h2>
+    <p class="my-2">4 soal Drag the Word · 3 soal Pilihan Ganda · 3 soal Mark the Word</p>
+    <label for="nm" class="block font-bold mt-4">Tulis namamu:</label>
+    <input id="nm" type="text" maxlength="40" autocomplete="off" placeholder="Nama lengkap" class="border-2 border-blue-400 rounded-xl px-4 py-3 w-full max-w-sm text-center text-lg mt-1" style="outline:none">
+    <p id="nmerr" class="text-red-600 font-bold h-6"></p>
+    <button class="btn text-lg" onclick="simStart()">MULAI SIMULASI</button>
+  </div>
+</section>
+<section id="s-sim" class="screen">
+  <div class="card">
+    <div class="flex justify-between font-bold mb-1"><span id="sh"></span><span id="st"></span></div>
+    <div class="w-full bg-blue-100 rounded-full h-3 mb-4"><div id="sb" class="bg-blue-600 h-3 rounded-full" style="width:0"></div></div>
+    <div id="sq"></div>
+    <div class="text-center mt-6"><button id="nx" class="btn" onclick="simNext()">Lanjut ➜</button></div>
+  </div>
+</section>
+
+<!-- SERTIFIKAT -->
+<section id="s-cert" class="screen">
+  <div id="cert" class="card text-center" style="border:10px double #2563eb;max-width:760px">
+    <div class="text-5xl">🏅</div>
+    <h2 class="text-3xl font-extrabold text-blue-700 mt-2">SERTIFIKAT PENCAPAIAN</h2>
+    <p class="mt-3">Diberikan kepada:</p>
+    <p id="cn" class="text-4xl font-extrabold my-2 break-words"></p>
+    <p>yang telah menyelesaikan simulasi Media Pembelajaran Interaktif Kimia<br><b>Konfigurasi Elektron</b> (Kelas X SMA)</p>
+    <p class="text-5xl font-extrabold text-amber-500 my-3"><span id="cs"></span></p>
+    <p>Predikat: <b id="cp"></b> · <span id="cd"></span></p>
+    <p class="mt-4 text-sm">Pengembang: Imas Roriah, S.Pd. · Tahun 2026</p>
+  </div>
+  <p id="sheetst" class="text-sm mt-3 text-center"></p>
+  <div class="flex flex-wrap gap-3 justify-center mt-3">
+    <button class="btn" onclick="window.print()">🖨️ Cetak</button>
+    <button class="btn alt" onclick="csv()">⬇️ Unduh Nilai (CSV)</button>
+    <button class="btn alt" onclick="go('siminfo')">🔁 Ulangi</button>
+  </div>
+</section>
+
+<script>
+const $=s=>document.querySelector(s);
+const sh=a=>[...a].sort(()=>Math.random()-.5);
+const rnd=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+/* ====== KONFIGURASI: isi URL Web App (mis. Google Apps Script) untuk kirim nilai otomatis ====== */
+const SHEET_URL='';
+/* ====== DATA UNSUR Z=1-20 ====== */
+const N=['H','He','Li','Be','B','C','N','O','F','Ne','Na','Mg','Al','Si','P','S','Cl','Ar','K','Ca'];
+const NM=['Hidrogen','Helium','Litium','Berilium','Boron','Karbon','Nitrogen','Oksigen','Fluorin','Neon','Natrium','Magnesium','Aluminium','Silikon','Fosfor','Belerang','Klorin','Argon','Kalium','Kalsium'];
+const R=['','IA','IIA','IIIA','IVA','VA','VIA','VIIA','VIIIA'];
+function cfg(z){let r=[],c=[2,8,8,8];for(let i=0;i<4&&z>0;i++){let t=Math.min(c[i],z);r.push(t);z-=t}return r}
+const cs=z=>cfg(z).join(', ');
+const per=z=>cfg(z).length;
+const val=z=>z==2?8:cfg(z).at(-1);
+const grp=z=>R[val(z)];
+function atom(z){const c=cfg(z);let s=`<svg viewBox="-110 -110 220 220" class="w-full max-w-[220px] mx-auto"><circle r="20" fill="#1d4ed8"/><text y="5" text-anchor="middle" fill="#fff" font-size="14" font-weight="700">${N[z-1]}</text>`;
+c.forEach((n,i)=>{const r=36+i*22;s+=`<circle r="${r}" fill="none" stroke="#93c5fd" stroke-width="2"/>`;for(let k=0;k<n;k++){const a=2*Math.PI*k/n;s+=`<circle cx="${(r*Math.cos(a)).toFixed(1)}" cy="${(r*Math.sin(a)).toFixed(1)}" r="5" fill="#f59e0b"/>`}});return s+'</svg>'}
+
+/* ====== AUDIO (disintesis, tanpa file eksternal) ====== */
+let AC,MG,music=true,vol=.6,tm,stp=0;
+function ac(){if(!AC){AC=new(window.AudioContext||window.webkitAudioContext)();MG=AC.createGain();MG.gain.value=vol;MG.connect(AC.destination)}if(AC.state==='suspended')AC.resume()}
+function tone(f,d,ty='sine',g=.25,w=0){if(!AC)return;const o=AC.createOscillator(),e=AC.createGain(),t=AC.currentTime+w;o.type=ty;o.frequency.value=f;e.gain.setValueAtTime(g,t);e.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(e);e.connect(MG);o.start(t);o.stop(t+d)}
+function sfx(k){if(!AC)return;if(k=='click')tone(700,.08,'square',.12);else if(k=='ok'){tone(523,.12,'triangle',.3);tone(784,.2,'triangle',.3,.12)}else if(k=='no')tone(180,.3,'sawtooth',.15);else if(k=='win')[523,659,784,1047].forEach((f,i)=>tone(f,.25,'triangle',.3,i*.14))}
+const MEL=[523,659,784,659,587,698,880,698,523,659,784,1047,988,784,659,587];
+function startMusic(){if(tm||!music)return;tm=setInterval(()=>{const f=MEL[stp%16];tone(f,.22,'triangle',.1);if(stp%4==0)tone(f/4,.5,'sine',.18);stp++},260)}
+function stopMusic(){clearInterval(tm);tm=null}
+function toggleMusic(){ac();music=!music;$('#mt').textContent='🎵 Musik: '+(music?'ON':'OFF');music?startMusic():stopMusic()}
+function setVol(v){vol=v/100;$('#vl').textContent=v;if(MG)MG.gain.value=vol}
+document.addEventListener('click',e=>{if(e.target.closest('button')){ac();sfx('click')}});
+
+/* ====== NAVIGASI ====== */
+let G={};
+function go(id){clearInterval(G.t);document.querySelectorAll('.screen').forEach(e=>e.classList.toggle('on',e.id==='s-'+id));$('#home').style.display=$('#gear').style.display=id==='splash'?'none':'block';if(id!=='splash')$('#set').classList.add('hidden');window.scrollTo(0,0)}
+function startApp(){ac();startMusic();go('menu')}
+
+/* ====== MATERI ====== */
+const TABS=['Model Bohr','Aturan Pengisian','Menulis Konfigurasi','Golongan & Periode','Rangkuman'];
+let tab=0,ez=11;
+const rv=(q,a)=>`<div class="rv" onclick="this.classList.toggle('open')"><b>👆 ${q}</b><div class="h">${a}</div></div>`;
+function expl(){const z=ez,c=cfg(z),K=['K','L','M','N'];
+return `<div class="flex flex-wrap gap-1 justify-center my-3">${N.map((n,i)=>`<button class="btn ${i+1==z?'sel':'alt'}" style="padding:6px 10px" onclick="ez=${i+1};materi()">${n}</button>`).join('')}</div>
+<div class="grid md:grid-cols-2 gap-3 items-center">${atom(z)}<div><p class="font-bold text-lg">${NM[z-1]} (${N[z-1]}) · Z = ${z}</p>
+<p>Elektron per kulit: ${c.map((n,i)=>`${K[i]} = ${n}`).join(', ')}</p><p class="font-bold">Konfigurasi: ${cs(z)}</p>
+<p>Kulit terisi: ${per(z)} → <b>Periode ${per(z)}</b></p><p>Elektron valensi: ${val(z)} → <b>Golongan ${grp(z)}</b></p></div></div>`}
+const MT=[
+()=>`<h2 class="text-xl font-extrabold">Model Atom Bohr</h2><p class="my-2">Niels Bohr (1913) menyatakan elektron mengelilingi inti pada lintasan tertentu yang disebut <b>kulit</b>, diberi nama <b>K, L, M, N</b> (n = 1, 2, 3, 4) dari yang terdekat dengan inti.</p>${atom(11)}<p class="text-center text-sm">Atom Natrium: 2, 8, 1</p>${rv('Apa isi inti atom?','Proton (+) dan neutron. Jumlah proton = nomor atom (Z). Pada atom netral, jumlah elektron = Z.')}${rv('Bagaimana energi tiap kulit?','Makin jauh dari inti, makin besar energi kulitnya. Elektron cenderung menempati kulit berenergi rendah lebih dulu.')}`,
+()=>`<h2 class="text-xl font-extrabold">Aturan Pengisian Elektron</h2><table class="t w-full my-3"><tr><th>Kulit</th><th>K</th><th>L</th><th>M</th><th>N</th></tr><tr><td>n</td><td>1</td><td>2</td><td>3</td><td>4</td></tr><tr><td>Maks (2n²)</td><td>2</td><td>8</td><td>18</td><td>32</td></tr></table><ol class="list-decimal ml-6"><li>Elektron mengisi kulit dari yang terdalam (K) lebih dulu.</li><li>Kapasitas maksimum kulit ke-n = <b>2n²</b>.</li><li>Kulit terluar maksimal <b>8</b> elektron (kulit K maksimal 2).</li><li>Untuk Z ≤ 20, kulit M terisi 8 elektron dulu sebelum kulit N.</li></ol>${rv('Contoh: konfigurasi K (Z = 19)?','K = 2, L = 8, M = 8 (kulit terluar maks 8), sisa 1 elektron ke N → <b>2, 8, 8, 1</b>')}`,
+()=>`<h2 class="text-xl font-extrabold">Menulis Konfigurasi Elektron</h2><ol class="list-decimal ml-6 my-2"><li>Tentukan jumlah elektron (= nomor atom).</li><li>Isi kulit K (maks 2), lalu L (maks 8), lalu M, lalu N.</li><li>Tulis jumlah elektron tiap kulit, dipisah koma.</li></ol><p class="font-bold">Pilih unsur dan lihat hasilnya:</p>${expl()}`,
+()=>`<h2 class="text-xl font-extrabold">Letak Golongan &amp; Periode</h2><ul class="list-disc ml-6 my-2"><li><b>Periode</b> = jumlah kulit yang terisi.</li><li><b>Golongan A</b> = jumlah elektron valensi (elektron di kulit terluar), mis. 7 → VIIA.</li><li>Khusus He: kulit penuh (2 elektron) → golongan VIIIA.</li></ul>${rv('Contoh: Cl (Z = 17)','Konfigurasi 2, 8, 7 → 3 kulit = <b>periode 3</b>; elektron valensi 7 = <b>golongan VIIA</b>.')}${rv('Contoh: Ca (Z = 20)','Konfigurasi 2, 8, 8, 2 → 4 kulit = <b>periode 4</b>; elektron valensi 2 = <b>golongan IIA</b>.')}<p class="font-bold mt-4">Coba analisis sendiri:</p>${expl()}`,
+()=>`<h2 class="text-xl font-extrabold">Rangkuman 📝</h2><ul class="list-disc ml-6 my-2"><li>Elektron berada pada kulit K, L, M, N.</li><li>Kapasitas kulit ke-n = 2n²; kulit terluar maks 8.</li><li>Jumlah kulit = nomor periode.</li><li>Elektron valensi = nomor golongan A.</li></ul><div class="text-center mt-4"><button class="btn" onclick="kuis();go('kuis')">Lanjut ke KUIS 🎮</button></div>`];
+function materi(){$('#tabs').innerHTML=TABS.map((t,i)=>`<button class="btn ${i==tab?'':'alt'} text-sm" style="padding:8px 12px" onclick="tab=${i};materi()">${t}</button>`).join('');$('#mc').innerHTML=MT[tab]()}
+
+/* ====== KUIS ====== */
+const GM=[{n:'Susun Kulit',ic:'🧩',d:'Atur jumlah elektron tiap kulit'},{n:'Detektif Letak',ic:'🔍',d:'Temukan golongan & periode unsur'},{n:'Kilat Benar/Salah',ic:'⚡',d:'Jawab cepat sebelum waktu habis'},{n:'Kartu Pasangan',ic:'🃏',d:'Cocokkan unsur dengan konfigurasinya'}];
+let UL=[1,1,1,1];
+function kuis(){$('#kl').innerHTML=GM.map((g,i)=>`<div class="card"><div class="text-3xl">${g.ic}</div><b class="text-lg">${g.n}</b><p class="text-sm mb-3">${g.d}</p><div class="flex gap-2">${[1,2,3].map(l=>`<button class="btn ${l<=UL[i]?'':'alt'}" ${l>UL[i]?'disabled':''} onclick="play(${i},${l})">Level ${l}${l>UL[i]?' 🔒':''}</button>`).join('')}</div></div>`).join('')}
+const rz=()=>G.l==1?rnd(1,10):G.l==2?rnd(11,20):rnd(3,20);
+const head=r=>`<div class="flex justify-between font-bold mb-3"><span>${GM[G.g].ic} ${GM[G.g].n} · Level ${G.l}</span><span>${r!==undefined?r:`Soal ${Math.min(G.i+1,3)}/3 · ⭐ ${G.ok}`}</span></div>`;
+function play(g,l){G={g,l,i:0,ok:0};go('game');nextQ()}
+function nextQ(){clearInterval(G.t);G.done=false;if(G.g==3)return memory();if(G.i>=3)return gres();[g0,g1,g2][G.g]()}
+function fin(c,msg){if(G.done)return;G.done=true;clearInterval(G.t);if(c){G.ok++;sfx('ok')}else sfx('no');G.i++;$('#fb').innerHTML=`<div class="font-bold ${c?'text-green-600':'text-red-600'} my-3">${c?'✅ Benar!':'❌ Kurang tepat.'} ${msg}</div><button class="btn" onclick="nextQ()">Lanjut ➜</button>`;document.querySelectorAll('#ga .opt').forEach(b=>b.disabled=true)}
+function gres(){const p=G.ok>=2;if(p){UL[G.g]=Math.max(UL[G.g],Math.min(3,G.l+1));sfx('win')}else sfx('no');
+$('#ga').innerHTML=head('Hasil')+`<div class="text-center"><div class="text-6xl">${p?'🎉':'💪'}</div><p class="text-xl font-bold my-2">${p?(G.l<3?'Level selesai!':'Semua level selesai! 🏆'):'Belum lulus, ayo coba lagi!'}</p><p>Skor: ${G.ok}/3 (minimal 2 untuk lulus)</p><div class="flex flex-wrap gap-3 justify-center mt-4">${p&&G.l<3?`<button class="btn" onclick="play(${G.g},${G.l+1})">Level Berikutnya ➜</button>`:''}<button class="btn alt" onclick="play(${G.g},${G.l})">Ulangi</button><button class="btn alt" onclick="kuis();go('kuis')">Menu Kuis</button></div></div>`}
+/* Game 1: Susun Kulit */
+function g0(){G.z=rz();G.c=[0,0,0,0];d0()}
+function d0(){const z=G.z,s=G.c.reduce((a,b)=>a+b,0);$('#ga').innerHTML=head()+`<p class="text-center text-lg">Susun konfigurasi elektron Bohr atom <b>${NM[z-1]} (${N[z-1]})</b>, nomor atom <b>${z}</b></p><p class="text-center my-2">Elektron terpakai: <b>${s}</b> / ${z}</p><div class="grid grid-cols-4 gap-2 text-center">${['K','L','M','N'].map((k,i)=>`<div><b>${k}</b><div class="text-3xl font-bold">${G.c[i]}</div><button class="btn opt" style="padding:6px 14px" onclick="i0(${i},1)">+</button> <button class="btn alt opt" style="padding:6px 14px" onclick="i0(${i},-1)">−</button></div>`).join('')}</div><div class="text-center mt-4"><button class="btn opt" onclick="c0()">Periksa</button></div><div id="fb" class="text-center"></div>`}
+function i0(i,d){if(G.done)return;G.c[i]=Math.max(0,Math.min(18,G.c[i]+d));d0()}
+function c0(){const w=[...cfg(G.z),0,0,0].slice(0,4);fin(w.every((v,i)=>v==G.c[i]),'Jawaban: '+cs(G.z));}
+/* Game 2: Detektif Letak */
+function g1(){const z=G.z=rz(),v=val(z),p=per(z),k=[];const all=[[v,p],[p,v],[v+1,p],[v-1,p],[v,p+1],[v,p-1],[v+2,p],[v,p+2]].filter(([a,b])=>a>=1&&a<=8&&b>=1&&b<=4&&(a!=v||b!=p||true));
+const seen=new Set(),o=[];all.forEach(x=>{const s=x+'';if(!seen.has(s)){seen.add(s);o.push(x)}});G.a=[v,p]+'';G.o=sh(o.slice(0,4).some(x=>x+''==G.a)?o.slice(0,4):[o[0],...o.slice(1,4)]);
+const q=G.l<3?`Konfigurasi elektron: <b>${cs(z)}</b>`:`Atom <b>${NM[z-1]} (${N[z-1]})</b>, Z = <b>${z}</b>`;
+$('#ga').innerHTML=head()+`<p class="text-center text-lg mb-3">${q}<br>Di manakah letak unsur ini dalam tabel periodik?</p><div class="grid gap-2">${G.o.map(x=>`<button class="btn alt opt" onclick="a1('${x}')">Golongan ${R[x[0]]}, Periode ${x[1]}</button>`).join('')}</div><div id="fb" class="text-center"></div>`}
+function a1(x){fin((x+'')==G.a,`${N[G.z-1]}: ${cs(G.z)} → Golongan ${grp(G.z)}, Periode ${per(G.z)}`)}
+/* Game 3: Kilat Benar/Salah */
+function g2(){const z=rz(),t=Math.random()<.5,k=Math.random()<.5;let w=z;if(!t){const c=[...Array(20).keys()].map(i=>i+1).filter(x=>k?cs(x)!=cs(z):(grp(x)!=grp(z)||per(x)!=per(z)));w=c[rnd(0,c.length-1)]}
+G.z=z;G.tf=t;G.s=k?`Atom ${N[z-1]} (Z = ${z}) berkonfigurasi elektron <b>${cs(w)}</b>.`:`Atom ${N[z-1]} (Z = ${z}) terletak pada <b>golongan ${grp(w)}, periode ${per(w)}</b>.`;G.tl=[12,9,7][G.l-1];
+$('#ga').innerHTML=head()+`<p class="text-center font-bold text-2xl text-amber-600">⏱️ <span id="tm">${G.tl}</span></p><p class="text-center text-xl my-4">${G.s}</p><div class="flex gap-3 justify-center"><button class="btn opt" onclick="a2(true)">BENAR</button><button class="btn alt opt" onclick="a2(false)">SALAH</button></div><div id="fb" class="text-center"></div>`;
+G.t=setInterval(()=>{G.tl--;const e=$('#tm');if(e)e.textContent=G.tl;if(G.tl<=0)fin(false,'Waktu habis! '+ans2())},1000)}
+const ans2=()=>`${N[G.z-1]}: ${cs(G.z)} → Golongan ${grp(G.z)}, Periode ${per(G.z)}`;
+function a2(v){fin(v===G.tf,ans2())}
+/* Game 4: Kartu Pasangan */
+function memory(){const n=[3,4,6][G.l-1],zs=sh([...Array(20).keys()].map(i=>i+1)).slice(0,n),c=[];zs.forEach(z=>{c.push({z,t:`${N[z-1]}<br><small>Z=${z}</small>`});c.push({z,t:cs(z)})});G.cards=sh(c);G.open=[];G.found=0;G.mv=0;G.n=n;G.lock=false;dm()}
+function dm(){$('#ga').innerHTML=head(`Langkah: ${G.mv} · Pasangan: ${G.found}/${G.n}`)+`<p class="text-center mb-3">Cocokkan simbol unsur dengan konfigurasi elektronnya!</p><div class="grid gap-2 ${G.n==3?'grid-cols-3':'grid-cols-4'}">${G.cards.map((c,i)=>`<button class="btn ${c.m?'sel':G.open.includes(i)?'alt':''}" style="min-height:70px;padding:6px" ${c.m?'disabled':''} onclick="fm(${i})">${c.m||G.open.includes(i)?c.t:'?'}</button>`).join('')}</div>`}
+function fm(i){if(G.lock||G.open.includes(i))return;G.open.push(i);if(G.open.length==2){G.mv++;const[a,b]=G.open.map(x=>G.cards[x]);if(a.z==b.z){a.m=b.m=1;G.found++;G.open=[];sfx('ok');if(G.found==G.n){G.ok=3;G.i=3;dm();setTimeout(gres,900);return}}else{G.lock=true;sfx('no');setTimeout(()=>{G.open=[];G.lock=false;dm()},800)}}dm()}
+
+/* ====== SIMULASI ====== */
+const Q=[
+{t:'drag',s:'Konfigurasi elektron Bohr atom Na (Z = 11) adalah 2, [], 1.',w:['8','18','3','2'],a:['8']},
+{t:'drag',s:'Kulit K maksimal menampung [] elektron, sedangkan kulit L maksimal [] elektron.',w:['8','2','18','32'],a:['2','8']},
+{t:'drag',s:'Jumlah kulit atom menunjukkan nomor [], sedangkan elektron valensi menunjukkan nomor [].',w:['golongan','massa','periode','nomor atom'],a:['periode','golongan']},
+{t:'drag',s:'Atom Cl (Z = 17) berkonfigurasi 2, 8, 7 sehingga terletak pada golongan [] dan periode [].',w:['VIA','3','VIIA','4'],a:['VIIA','3']},
+{t:'pg',s:'Konfigurasi elektron Bohr atom Mg (Z = 12) adalah ...',o:['2, 8, 1','2, 10','2, 8, 2','2, 2, 8'],a:2},
+{t:'pg',s:'Unsur dengan konfigurasi elektron 2, 8, 3 terletak pada ...',o:['Golongan IIIA, periode 2','Golongan IIA, periode 3','Golongan VIIIA, periode 3','Golongan IIIA, periode 3'],a:3},
+{t:'pg',s:'Jumlah elektron maksimum pada kulit ke-n dirumuskan dengan ...',o:['n²','2n²','2n','n + 2'],a:1},
+{t:'mark',s:'Tandai semua unsur yang terletak pada <b>periode 3</b>:',w:['Na','Mg','K','Cl','Ca','He'],a:['Na','Mg','Cl']},
+{t:'mark',s:'Tandai semua unsur yang memiliki <b>1 elektron valensi</b>:',w:['H','Li','Be','Na','F','K'],a:['H','Li','Na','K']},
+{t:'mark',s:'Tandai semua unsur <b>golongan VIIIA</b> (gas mulia):',w:['He','Ne','F','Ar','Cl','Na'],a:['He','Ne','Ar']}];
+const TL={drag:'Drag the Word',pg:'Pilihan Ganda',mark:'Mark the Word'};
+let S={},RES=[];
+function simStart(){const n=$('#nm').value.trim();if(!n){$('#nmerr').textContent='Isi namamu dulu ya!';$('#nm').focus();return}$('#nmerr').textContent='';S={n,i:0,pt:0};go('sim');simQ()}
+function simQ(){const q=S.q=Q[S.i];S.b=q.t=='drag'?q.a.map(()=>null):[];S.sel=null;S.m=new Set();S.p=null;
+$('#sh').textContent=`Soal ${S.i+1}/10 · ${TL[q.t]}`;$('#st').textContent='';$('#sb').style.width=(S.i*10)+'%';$('#nx').textContent=S.i==9?'Selesai ✔':'Lanjut ➜';({drag:dD,pg:dP,mark:dM})[q.t]()}
+function dD(){const q=S.q,p=q.s.split('[]');$('#sq').innerHTML=`<p class="text-lg leading-10">${p.map((x,i)=>x+(i<p.length-1?`<span class="blank" ondragover="event.preventDefault()" ondrop="plD(${i},S.drag)" onclick="bkD(${i})">${S.b[i]!=null?q.w[S.b[i]]:'&nbsp;&nbsp;&nbsp;&nbsp;'}</span>`:'')).join('')}</p><p class="text-sm mt-2">Seret kata ke kotak kosong (atau klik kata, lalu klik kotak). Klik kotak terisi untuk mengosongkan.</p><div class="flex flex-wrap gap-2 justify-center mt-4">${q.w.map((w,i)=>S.b.includes(i)?'':`<span class="chip ${S.sel===i?'on':''}" draggable="true" ondragstart="S.drag=${i}" onclick="S.sel=${i};dD()">${w}</span>`).join('')}</div>`}
+function plD(i,c){if(c==null)return;S.b[i]=c;S.sel=null;S.drag=null;dD()}
+function bkD(i){if(S.sel!=null)plD(i,S.sel);else{S.b[i]=null;dD()}}
+function dP(){const q=S.q;$('#sq').innerHTML=`<p class="text-lg mb-3">${q.s}</p>`+q.o.map((o,i)=>`<button class="btn ${S.p===i?'sel':'alt'} block w-full text-left mb-2" onclick="S.p=${i};dP()">${'ABCD'[i]}. ${o}</button>`).join('')}
+function dM(){const q=S.q;$('#sq').innerHTML=`<p class="text-lg mb-3">${q.s}</p><p class="text-sm mb-2">Klik kata untuk menandai / membatalkan.</p><div class="flex flex-wrap gap-3 justify-center">${q.w.map(w=>`<span class="chip text-xl ${S.m.has(w)?'on':''}" onclick="mk('${w}')">${w}</span>`).join('')}</div>`}
+function mk(w){S.m.has(w)?S.m.delete(w):S.m.add(w);dM()}
+function simNext(){const q=S.q;let ok=false;
+if(q.t=='drag')ok=S.b.every((c,i)=>c!=null&&q.w[c]==q.a[i]);else if(q.t=='pg')ok=S.p===q.a;else ok=S.m.size==q.a.length&&q.a.every(x=>S.m.has(x));
+if(ok)S.pt+=10;S.i++;if(S.i>=10)return fin2();simQ()}
+function fin2(){const d=new Date().toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'}),r={nama:S.n,skor:S.pt,tanggal:d,waktu:new Date().toISOString()};RES.push(r);
+if(SHEET_URL){fetch(SHEET_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify(r)}).catch(()=>{});$('#sheetst').textContent='✅ Nilai dikirim ke lembar data.'}else $('#sheetst').textContent='ℹ️ Isi SHEET_URL di kode agar nilai terkirim otomatis, atau unduh CSV lalu impor ke Canva Sheets.';
+$('#cn').textContent=S.n;$('#cs').textContent=S.pt+' / 100';$('#cd').textContent=d;$('#cp').textContent=S.pt>=80?'Sangat Baik':S.pt>=60?'Baik':'Cukup, Tetap Semangat!';sfx('win');go('cert')}
+function csv(){const t='Nama,Skor,Tanggal,Waktu\n'+RES.map(r=>[r.nama.replace(/"/g,'""'),r.skor,r.tanggal,r.waktu].map(v=>`"${v}"`).join(',')).join('\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+t],{type:'text/csv'}));a.download='nilai_konfigurasi_elektron.csv';a.click()}
+</script>
+</body>
+</html>
